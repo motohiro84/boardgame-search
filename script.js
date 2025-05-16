@@ -39,16 +39,19 @@ function loadData() {
     )
   ).then(results => {
     const allRows = results.flat().filter(entry => {
-      const [no, title, people, time, candidate] = entry.row;
+      const [noRaw, titleRaw, peopleRaw, timeRaw, candidateRaw] = entry.row;
 
-      // ボードゲーム名が空白・空文字は除外
-      if (!title) return false;
-
-      // 候補カラムが空でない → 候補
-      const isCandidate = candidate !== "";
-
-      // showAll が true → 候補でなくても表示
-      return showAll || isCandidate;
+      const title = (titleRaw || "").trim();       // ボードゲーム名
+      const candidate = (candidateRaw || "").trim(); // 候補
+  
+      // ボードゲーム名が null, undefined, 空白, スペースのみ → 除外
+      if (!title || title.length === 0) return false;
+  
+      // showAll = true → すべて表示
+      if (showAll) return true;
+  
+      // showAll = false → 候補が "〇" のときのみ表示（空白・全角対応）
+      return candidate.replace(/[\s\u3000]/g, "") === "〇";
     });
 
     renderTable(allRows);
