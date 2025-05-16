@@ -42,11 +42,13 @@ function loadData() {
       const [no, title, people, time, candidate] = entry.row;
 
       // ボードゲーム名が空白・空文字は除外
-      if (!title || title.trim() === "") return false;
-      
-      // 候補判定
-      if (showAll) return true;  // 候補以外も表示ONなら全表示
-      return candidate || candidate.trim() !== "";
+      if (!title) return false;
+
+      // 候補カラムが空でない → 候補
+      const isCandidate = candidate !== "";
+
+      // showAll が true → 候補でなくても表示
+      return showAll || isCandidate;
     });
 
     renderTable(allRows);
