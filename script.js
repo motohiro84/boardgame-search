@@ -39,19 +39,11 @@ function loadData() {
     )
   ).then(results => {
     const allRows = results.flat().filter(entry => {
-      const [noRaw, titleRaw, peopleRaw, timeRaw, candidateRaw] = entry.row;
-
-      const title = (titleRaw || "").trim();       // ボードゲーム名
-      const candidate = (candidateRaw || "").trim(); // 候補
+      const [no, title, people, time, candidate] = entry.row.map(cell => cell?.trim() || "");
   
-      // ボードゲーム名が null, undefined, 空白, スペースのみ → 除外
-      if (!title || title.length === 0) return false;
-  
-      // showAll = true → すべて表示
-      if (showAll) return true;
-  
-      // showAll = false → 候補が "〇" のときのみ表示（空白・全角対応）
-      return candidate.replace(/[\s\u3000]/g, "") === "〇";
+      if (!title) return false; // 空白は除外
+      if (showAll) return true; // 全表示モード
+      return candidate === "〇"; // 候補のみ
     });
 
     renderTable(allRows);
@@ -59,9 +51,26 @@ function loadData() {
 }
 
 function parseCsv(text) {
-  return text.trim().split("\n").slice(1).map(line =>
-    line.split(",").map(cell => cell.trim())
-  );
+  const lines = text.trim().split("\n");
+  const result = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const regex = /("([^"]*(?:""[^"]*)*)"|[^,]*)(,|$)/g;
+    const row = [];
+    let match;
+    while ((match = regex.exec(line)) !== null) {
+      let value = match[1];
+      // ダブルクォートで囲まれていれば中身を整形
+      if (value.startsWith('"') && value.endsWith('"')) {
+        value = value.slice(1, -1).replace(/""/g, '"');
+      }
+      row.push(value.trim());
+    }
+    result.push(row);
+  }
+
+  return result;
 }
 
 function renderTable(data) {
