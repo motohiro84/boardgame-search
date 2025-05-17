@@ -7,24 +7,23 @@ const sheetMap = {
 };
 
 const SPREADSHEET_ID = "1U4SfyivZyZGd8eXaFdSoWuSVP1GVjfkh86wez3Dzq1w";
-
 const baseUrl = (sheet) =>
   `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}`;
 
 const ownerCheckboxesDiv = document.getElementById("ownerCheckboxes");
 const resultTable = document.getElementById("resultTable");
 
-// 「全員」チェックボックスの追加
+// 全員チェックボックス
 const allLabel = document.createElement("label");
-const allCheckbox = document.createElement("input");
-allCheckbox.type = "checkbox";
-allCheckbox.id = "checkAllOwners";
-allCheckbox.checked = true;
-allLabel.appendChild(allCheckbox);
+const allCb = document.createElement("input");
+allCb.type = "checkbox";
+allCb.id = "checkAll";
+allCb.checked = true;
+allLabel.appendChild(allCb);
 allLabel.append(" 全員");
 ownerCheckboxesDiv.appendChild(allLabel);
 
-// 所持者のチェックボックスを追加（初期状態は全てON）
+// 各所持者チェックボックス
 Object.keys(sheetMap).forEach(owner => {
   const label = document.createElement("label");
   const cb = document.createElement("input");
@@ -32,29 +31,24 @@ Object.keys(sheetMap).forEach(owner => {
   cb.value = owner;
   cb.checked = true;
   cb.classList.add("owner-check");
-
-  // 所持者のチェック変更時に「全員」のチェック状態を更新
-  cb.addEventListener("change", () => {
-    const allCbs = [...document.querySelectorAll(".owner-check")];
-    const allChecked = allCbs.every(cb => cb.checked);
-    allCheckbox.checked = allChecked;
-    loadData();
-  });
-
   label.appendChild(cb);
   label.append(" " + owner);
   ownerCheckboxesDiv.appendChild(label);
 });
 
-// 「全員」チェックの挙動
-allCheckbox.addEventListener("change", () => {
-  const checked = allCheckbox.checked;
+// 全員チェックの挙動
+allCb.addEventListener("change", () => {
   const ownerCbs = document.querySelectorAll(".owner-check");
-  ownerCbs.forEach(cb => cb.checked = checked);
-  loadData();
+  ownerCbs.forEach(cb => cb.checked = allCb.checked);
 });
 
-// データ読み込み関数
+// 個別チェックが外れたら「全員」も外す or 全部チェックなら全員に戻す
+ownerCheckboxesDiv.addEventListener("change", () => {
+  const ownerCbs = document.querySelectorAll(".owner-check");
+  const allChecked = [...ownerCbs].every(cb => cb.checked);
+  allCb.checked = allChecked;
+});
+
 function loadData() {
   resultTable.innerHTML = "";
   const showAll = document.getElementById("showAll").checked;
@@ -72,42 +66,41 @@ function loadData() {
       const [no, title, people, time, candidate] =
         entry.row.map(cell => (cell || "").trim().replace(/^"|"$/g, ""));
 
-      if (!title) return false; // ボードゲーム名が空なら除外
-      if (showAll) return true; // 「候補以外も表示」がONならすべて表示
-      return candidate === "〇"; // 候補が「〇」なら表示
+      if (!title) return false;
+      if (showAll) return true;
+      return candidate === "〇";
     });
+
+    // ボードゲーム名で昇順ソート
+    allRows.sort((a, b) => a.row[1].localeCompare(b.row[1], 'ja'));
 
     renderTable(allRows);
   });
 }
 
-// CSVパース関数
 function parseCsv(text) {
   return text.trim().split("\n").slice(1).map(line =>
     line.split(",").map(cell => cell.trim())
   );
 }
 
-// 表示テーブル生成
 function renderTable(data) {
   resultTable.innerHTML = `
-    <tr>
+    <thead><tr>
       <th>所持者</th>
       <th>ボードゲーム</th>
       <th>人数</th>
       <th>時間</th>
-    </tr>
-  ` + data.map(({ owner, row }) => `
-    <tr>
-      <td>${owner}</td>
-      <td>${row[1]}</td>
-      <td>${row[2]}</td>
-      <td>${row[3]}</td>
-    </tr>
-  `).join("");
+    </tr></thead>
+    <tbody>
+      ${data.map(({ owner, row }) => `
+        <tr>
+          <td>${owner}</td>
+          <td>${row[1]}</td>
+          <td>${row[2]}</td>
+          <td>${row[3]}</td>
+        </tr>
+      `).join("")}
+    </tbody>
+  `;
 }
-
-// 初期表示時に読み込み
-window.addEventListener("load", () => {
-  loadData();
-});
