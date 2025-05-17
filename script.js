@@ -90,7 +90,7 @@ function parseCsv(text) {
 }
 
 function renderTable(data) {
-  resultTable.innerHTML = `
+  let tableHTML = `
     <thead>
       <tr class="table-primary">
         <th>所持者</th>
@@ -100,16 +100,27 @@ function renderTable(data) {
       </tr>
     </thead>
     <tbody>
-      ${data.map(({ owner, row }) => `
-        <tr>
-          <td>${owner}</td>
-          <td>${row[1].replace(/^"|"$/g, "")}</td>
-          <td>${row[2].replace(/^"|"$/g, "")}</td>
-          <td>${row[3].replace(/^"|"$/g, "")}</td>
-        </tr>
-      `).join("")}
-    </tbody>
   `;
+
+  if (data.length === 0) {
+    tableHTML += `
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 10px;">該当データが存在しません</td>
+      </tr>
+    `;
+  } else {
+    tableHTML += data.map(({ owner, row }) => `
+      <tr>
+        <td>${owner}</td>
+        <td style="text-align: left;">${row[1].replace(/^"|"$/g, "")}</td>
+        <td style="text-align: left;">${row[2].replace(/^"|"$/g, "")}</td>
+        <td style="text-align: left;">${row[3].replace(/^"|"$/g, "")}</td>
+      </tr>
+    `).join("");
+  }
+
+  tableHTML += "</tbody>";
+  resultTable.innerHTML = tableHTML;
 }
 
 // 初期読み込み時に自動実行
