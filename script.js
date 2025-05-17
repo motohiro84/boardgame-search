@@ -49,8 +49,12 @@ ownerCheckboxesDiv.addEventListener("change", () => {
   allCb.checked = allChecked;
 });
 
+// 初期ロードフラグ
+let isFirstLoad = true;
+
 function loadData() {
   resultTable.innerHTML = "";
+
   const showAll = document.getElementById("showAll").checked;
   const selectedOwners = [...ownerCheckboxesDiv.querySelectorAll(".owner-check:checked")].map(cb => cb.value);
   const targets = selectedOwners.length > 0 ? selectedOwners : Object.keys(sheetMap);
@@ -76,6 +80,8 @@ function loadData() {
 
     renderTable(allRows);
   });
+
+  isFirstLoad = false;
 }
 
 function parseCsv(text) {
@@ -104,3 +110,8 @@ function renderTable(data) {
     </tbody>
   `;
 }
+
+// 初期読み込み時に自動実行
+window.addEventListener("DOMContentLoaded", () => {
+  if (isFirstLoad) loadData();
+});
