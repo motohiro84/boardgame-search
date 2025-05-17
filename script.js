@@ -68,14 +68,13 @@ function loadData() {
   ).then(results => {
     const allRows = results.flat().filter(entry => {
       const [no, title, people, time, candidate] =
-        entry.row.map(cell => (cell || "").trim().replace(/^"|"$/g, ""));
+        entry.row.map(cell => (cell || "").trim().replace(/^"|"$/g, "")); // ← ここで前後の " を削除
 
       if (!title) return false;
       if (showAll) return true;
       return candidate === "〇";
     });
 
-    // ボードゲーム名で昇順ソート
     allRows.sort((a, b) => a.row[1].localeCompare(b.row[1], 'ja'));
 
     renderTable(allRows);
@@ -92,19 +91,21 @@ function parseCsv(text) {
 
 function renderTable(data) {
   resultTable.innerHTML = `
-    <thead><tr>
-      <th>所持者</th>
-      <th>ボードゲーム</th>
-      <th>人数</th>
-      <th>時間</th>
-    </tr></thead>
+    <thead>
+      <tr class="table-primary">
+        <th>所持者</th>
+        <th>ボードゲーム</th>
+        <th>人数</th>
+        <th>時間</th>
+      </tr>
+    </thead>
     <tbody>
       ${data.map(({ owner, row }) => `
         <tr>
           <td>${owner}</td>
-          <td>${row[1]}</td>
-          <td>${row[2]}</td>
-          <td>${row[3]}</td>
+          <td>${row[1].replace(/^"|"$/g, "")}</td>
+          <td>${row[2].replace(/^"|"$/g, "")}</td>
+          <td>${row[3].replace(/^"|"$/g, "")}</td>
         </tr>
       `).join("")}
     </tbody>
