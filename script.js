@@ -57,10 +57,16 @@ function loadData() {
 
   const showAll = document.getElementById("showAll").checked;
   const selectedOwners = [...ownerCheckboxesDiv.querySelectorAll(".owner-check:checked")].map(cb => cb.value);
-  const targets = selectedOwners.length > 0 ? selectedOwners : Object.keys(sheetMap);
+
+  // チェックが一つもない場合は空配列のまま → 結果0件表示になる
+  if (selectedOwners.length === 0) {
+    renderTable([]); // すぐに該当なし表示して終了
+    isFirstLoad = false;
+    return;
+  }
 
   Promise.all(
-    targets.map(owner =>
+    selectedOwners.map(owner =>
       fetch(baseUrl(sheetMap[owner]))
         .then(res => res.text())
         .then(csv => parseCsv(csv).map(row => ({ owner, row })))
@@ -68,7 +74,7 @@ function loadData() {
   ).then(results => {
     const allRows = results.flat().filter(entry => {
       const [no, title, people, time, candidate] =
-        entry.row.map(cell => (cell || "").trim().replace(/^"|"$/g, "")); // ← ここで前後の " を削除
+        entry.row.map(cell => (cell || "").trim().replace(/^"|"$/g, ""));
 
       if (!title) return false;
       if (showAll) return true;
