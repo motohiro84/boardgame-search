@@ -101,7 +101,7 @@ function renderTable(data) {
     </thead>
     <tbody>
   `;
-
+  console.log(data.length);
   if (data.length === 0) {
     tableHTML += `
       <tr>
